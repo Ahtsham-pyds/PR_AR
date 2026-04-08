@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proposal Form</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f3f6fb;
+        color: #122038;
+      }
+      .container {
+        max-width: 680px;
+        margin: 32px auto;
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      input,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #ccd6e5;
+        border-radius: 8px;
+      }
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+      button {
+        background: #155eef;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        cursor: pointer;
+      }
+      #result {
+        margin-top: 16px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #eef4ff;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Create Proposal</h1>
+      <form id="proposalForm">
+        <div class="field">
+          <label for="id">ID</label>
+          <input id="id" name="id" type="number" required />
+        </div>
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" required />
+        </div>
+        <div class="field">
+          <label for="category">Category</label>
+          <input id="category" name="category" required />
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" required></textarea>
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" name="date" type="date" required />
+        </div>
+        <div class="field">
+          <label for="owner">Owner</label>
+          <input id="owner" name="owner" required />
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+      <div id="result"></div>
+    </div>
+
+    <script>
+      const form = document.getElementById("proposalForm");
+      const result = document.getElementById("result");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        result.textContent = "Submitting...";
+
+        const payload = {
+          id: Number(document.getElementById("id").value),
+          name: document.getElementById("name").value,
+          category: document.getElementById("category").value,
+          description: document.getElementById("description").value,
+          date: document.getElementById("date").value,
+          owner: document.getElementById("owner").value,
+        };
+
+        try {
+          const response = await fetch("/proposals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            result.textContent = `Error: ${data.detail || "Request failed"}`;
+            return;
+          }
+
+          result.textContent = `Saved successfully:\n${JSON.stringify(data, null, 2)}`;
+          form.reset();
+        } catch (error) {
+          result.textContent = `Error: ${error.message}`;
+        }
+      });
+    </script>
+  </body>
+</html>
