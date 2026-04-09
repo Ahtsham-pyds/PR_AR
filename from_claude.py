@@ -17,15 +17,17 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from openai import OpenAI
 import httpx
+from dotenv import load_dotenv
+load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
 LLAMAPARSE_API_KEY = os.getenv("LLAMAPARSE_API_KEY", "")
-OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY", "")
+
 DB_PATH            = "profile_builder.db"
 FAISS_INDEX_PATH   = "faiss_index.bin"
 FAISS_META_PATH    = "faiss_meta.pkl"
 EMBED_DIM          = 384   # all-MiniLM-L6-v2
-
+OPENAI_API_KEY     = os.getenv("OPEN_API_KEY", "")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ── Globals (loaded at startup) ───────────────────────────────────────────────
@@ -38,7 +40,8 @@ faiss_meta:  List[Dict]          = []   # [{session_id, text, source}, ...]
 async def lifespan(app: FastAPI):
     global embed_model, faiss_index, faiss_meta
     print("Loading MiniLM embedding model …")
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+    #embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+    embed_model = SentenceTransformer("./models/all-MiniLM-L6-v2")
 
     if Path(FAISS_INDEX_PATH).exists():
         faiss_index = faiss.read_index(FAISS_INDEX_PATH)
@@ -381,6 +384,16 @@ def get_chat_history(session_id: str):
     return [{"role": r["role"], "content": r["content"], "time": r["created_at"]} for r in rows]
 
 # ── Serve frontend ─────────────────────────────────────────────────────────────
-frontend_path = Path(__file__).parent.parent / "frontend"
-if frontend_path.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+# frontend_path = Path(__file__).parent.parent / "frontend"
+# if frontend_path.exists():
+#     app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+
+@app.get("/")
+def serve_form():
+    frontend_path = Path(__file__).resolve().parents[1] /"PR_ARAM"/ "frontend" / "index.html"
+    return FileResponse(frontend_path)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -15,7 +15,7 @@ Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def serve_form():
-    frontend_path = Path(__file__).resolve().parents[1] /"PR_ARAM"/ "frontend" / "index.html"
+    frontend_path = Path(__file__).resolve().parents[1] /"PR_ARAM"/ "frontend" / "index1.html"
     return FileResponse(frontend_path)
 
 

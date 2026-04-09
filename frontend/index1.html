@@ -1,0 +1,287 @@
+ <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proposal Form + Chat Fill</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f3f6fb;
+        color: #122038;
+      }
+      .container {
+        max-width: 980px;
+        margin: 32px auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .panel {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+      }
+      h1,
+      h2 {
+        margin-top: 0;
+      }
+      .chat-box {
+        height: 260px;
+        border: 1px solid #ccd6e5;
+        border-radius: 8px;
+        padding: 10px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        background: #fafcff;
+      }
+      .msg {
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+      .user {
+        color: #0b3b9a;
+      }
+      .bot {
+        color: #14532d;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      input,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        border: 1px solid #ccd6e5;
+        border-radius: 8px;
+      }
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+      .chat-input {
+        min-height: 90px;
+      }
+      button {
+        background: #155eef;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        cursor: pointer;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+      }
+      #result {
+        margin-top: 16px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #eef4ff;
+        white-space: pre-wrap;
+      }
+      .preview-card {
+        margin-top: 16px;
+        border: 1px solid #d2def2;
+        border-radius: 10px;
+        padding: 14px;
+        background: #f8fbff;
+      }
+      .preview-card p {
+        margin: 8px 0;
+      }
+      @media (max-width: 860px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <section class="panel">
+        <h2>Chatbot Assistant</h2>
+        <div id="chatBox" class="chat-box"></div>
+        <div class="field">
+          <label for="chatPrompt">Enter prompt</label>
+          <textarea
+            id="chatPrompt"
+            class="chat-input"
+            placeholder="Example: Create proposal id 101, name Website Revamp, category IT, description Build a new website by 2026-05-15, owner Aram"
+          ></textarea>
+        </div>
+        <div class="actions">
+          <button id="fillBtn" type="button">Fill Card From Prompt</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h1>Create Proposal</h1>
+        <form id="proposalForm">
+          <div class="field">
+            <label for="id">ID</label>
+            <input id="id" name="id" type="number" required />
+          </div>
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="name" required />
+          </div>
+          <div class="field">
+            <label for="category">Category</label>
+            <input id="category" name="category" required />
+          </div>
+          <div class="field">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" required></textarea>
+          </div>
+          <div class="field">
+            <label for="date">Date</label>
+            <input id="date" name="date" type="date" required />
+          </div>
+          <div class="field">
+            <label for="owner">Owner</label>
+            <input id="owner" name="owner" required />
+          </div>
+          <button type="submit">Submit</button>
+        </form>
+        <div class="preview-card" id="previewCard">
+          <strong>Card Preview</strong>
+          <p><b>ID:</b> <span id="pId">-</span></p>
+          <p><b>Name:</b> <span id="pName">-</span></p>
+          <p><b>Category:</b> <span id="pCategory">-</span></p>
+          <p><b>Description:</b> <span id="pDescription">-</span></p>
+          <p><b>Date:</b> <span id="pDate">-</span></p>
+          <p><b>Owner:</b> <span id="pOwner">-</span></p>
+        </div>
+        <div id="result"></div>
+      </section>
+    </div>
+
+    <script>
+      const form = document.getElementById("proposalForm");
+      const result = document.getElementById("result");
+      const fillBtn = document.getElementById("fillBtn");
+      const chatPrompt = document.getElementById("chatPrompt");
+      const chatBox = document.getElementById("chatBox");
+
+      function addMessage(role, text) {
+        const div = document.createElement("div");
+        div.className = `msg ${role}`;
+        div.textContent = `${role === "user" ? "You" : "Assistant"}: ${text}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      function updatePreview() {
+        document.getElementById("pId").textContent = document.getElementById("id").value || "-";
+        document.getElementById("pName").textContent = document.getElementById("name").value || "-";
+        document.getElementById("pCategory").textContent = document.getElementById("category").value || "-";
+        document.getElementById("pDescription").textContent =
+          document.getElementById("description").value || "-";
+        document.getElementById("pDate").textContent = document.getElementById("date").value || "-";
+        document.getElementById("pOwner").textContent = document.getElementById("owner").value || "-";
+      }
+
+      function extractValue(text, label) {
+        const match = text.match(new RegExp(`${label}\\s*[:=-]?\\s*([^,\\n]+)`, "i"));
+        return match ? match[1].trim() : "";
+      }
+
+      function extractFromPrompt(text) {
+        const extracted = {
+          id: extractValue(text, "id"),
+          name: extractValue(text, "name"),
+          category: extractValue(text, "category"),
+          description: extractValue(text, "description"),
+          date: extractValue(text, "date"),
+          owner: extractValue(text, "owner"),
+        };
+
+        if (!extracted.id) {
+          const idMatch = text.match(/\b(\d{1,8})\b/);
+          extracted.id = idMatch ? idMatch[1] : "";
+        }
+
+        return extracted;
+      }
+
+      fillBtn.addEventListener("click", () => {
+        const prompt = chatPrompt.value.trim();
+        if (!prompt) {
+          addMessage("bot", "Please enter a prompt so I can fill the card.");
+          return;
+        }
+
+        addMessage("user", prompt);
+        const data = extractFromPrompt(prompt);
+
+        if (data.id) document.getElementById("id").value = Number(data.id);
+        if (data.name) document.getElementById("name").value = data.name;
+        if (data.category) document.getElementById("category").value = data.category;
+        if (data.description) document.getElementById("description").value = data.description;
+        if (data.date) document.getElementById("date").value = data.date;
+        if (data.owner) document.getElementById("owner").value = data.owner;
+
+        updatePreview();
+        addMessage(
+          "bot",
+          "I filled the card with the values I found. Please review and submit."
+        );
+      });
+
+      ["id", "name", "category", "description", "date", "owner"].forEach((fieldId) => {
+        document.getElementById(fieldId).addEventListener("input", updatePreview);
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        result.textContent = "Submitting...";
+
+        const payload = {
+          id: Number(document.getElementById("id").value),
+          name: document.getElementById("name").value,
+          category: document.getElementById("category").value,
+          description: document.getElementById("description").value,
+          date: document.getElementById("date").value,
+          owner: document.getElementById("owner").value,
+        };
+
+        try {
+          const response = await fetch("/proposals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            result.textContent = `Error: ${data.detail || "Request failed"}`;
+            return;
+          }
+
+          result.textContent = `Saved successfully:\n${JSON.stringify(data, null, 2)}`;
+          addMessage("bot", "Saved to database successfully.");
+          form.reset();
+          updatePreview();
+        } catch (error) {
+          result.textContent = `Error: ${error.message}`;
+        }
+      });
+
+      addMessage(
+        "bot",
+        "Send a prompt with id, name, category, description, date, and owner. I will fill the card."
+      );
+      updatePreview();
+    </script>
+  </body>
+</html>
