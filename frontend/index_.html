@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ProfileForge — Build Your Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset & Variables ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:       #0d0d0d;
+  --paper:     #faf8f5;
+  --cream:     #f2ede5;
+  --gold:      #c9a84c;
+  --gold-lt:   #e8d5a0;
+  --rust:      #c0492b;
+  --sage:      #4a7c59;
+  --slate:     #3d4f5c;
+  --muted:     #8a8a8a;
+  --border:    #ddd8cf;
+  --chat-bg:   #1a1a2e;
+  --chat-user: #c9a84c;
+  --chat-ai:   #2d2d4e;
+  --radius:    10px;
+  --shadow:    0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.14);
+}
+
+html, body { height: 100%; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 64px;
+  background: var(--ink);
+  border-bottom: 2px solid var(--gold);
+  flex-shrink: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: -0.5px;
+}
+.logo span { color: #fff; }
+.session-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.07);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ── Main Layout ─────────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Left Panel: Tabs + Forms ─────────────────────────────────────────── */
+.left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+/* ── Tab Navigation ───────────────────────────────────────────────────── */
+.tab-nav {
+  display: flex;
+  background: var(--cream);
+  border-bottom: 2px solid var(--border);
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
+  font-weight: 600;
+}
+.tab-icon {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  background: var(--border);
+  color: var(--muted);
+  transition: all 0.2s;
+}
+.tab-btn.active .tab-icon { background: var(--gold); color: var(--ink); }
+.tab-btn.complete .tab-icon { background: var(--sage); color: #fff; }
+
+/* ── Form Area ────────────────────────────────────────────────────────── */
+.form-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 36px;
+}
+.form-panel { display: none; }
+.form-panel.active { display: block; }
+
+.section-header {
+  margin-bottom: 28px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.section-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.form-grid.single { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.span2 { grid-column: span 2; }
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+.form-group textarea { min-height: 90px; resize: vertical; }
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.btn-primary {
+  background: var(--ink);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--slate); transform: translateY(-1px); }
+.btn-gold {
+  background: var(--gold);
+  color: var(--ink);
+}
+.btn-gold:hover { background: var(--gold-lt); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--ink); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* Saved pulse */
+.btn.saved {
+  background: var(--sage) !important;
+  color: #fff !important;
+}
+
+/* ── Right Panel: Chatbot ─────────────────────────────────────────────── */
+.right-panel {
+  width: 380px;
+  min-width: 340px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  background: var(--chat-bg);
+  flex-shrink: 0;
+}
+
+.chat-header {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.chat-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.chat-subtitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+.chat-rag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--gold);
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.rag-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.msg {
+  max-width: 85%;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-user { align-self: flex-end; }
+.msg-ai   { align-self: flex-start; }
+
+.msg-bubble {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.msg-user .msg-bubble {
+  background: var(--gold);
+  color: var(--ink);
+  border-radius: 14px 14px 4px 14px;
+  font-weight: 500;
+}
+.msg-ai .msg-bubble {
+  background: var(--chat-ai);
+  color: rgba(255,255,255,0.88);
+  border-radius: 14px 14px 14px 4px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.msg-time {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 3px;
+  font-family: 'DM Mono', monospace;
+  padding: 0 2px;
+}
+.msg-user .msg-time { text-align: right; }
+
+.typing-indicator {
+  display: flex; align-items: center; gap: 4px;
+  padding: 12px 14px;
+  background: var(--chat-ai);
+  border-radius: 14px 14px 14px 4px;
+  width: fit-content;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  animation: typingPulse 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingPulse {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ── Chat Upload Zone ─────────────────────────────────────────────────── */
+.upload-zone {
+  margin: 0 16px 12px;
+  border: 1.5px dashed rgba(201,168,76,0.35);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: rgba(201,168,76,0.04);
+}
+.upload-zone:hover { border-color: var(--gold); background: rgba(201,168,76,0.09); }
+.upload-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.12); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.upload-icon { font-size: 20px; margin-bottom: 4px; }
+.upload-label { font-size: 12px; color: rgba(255,255,255,0.5); }
+.upload-label strong { color: var(--gold); }
+.upload-progress {
+  height: 3px; background: rgba(255,255,255,0.1);
+  border-radius: 2px; margin-top: 8px; overflow: hidden; display: none;
+}
+.upload-progress-bar {
+  height: 100%; background: var(--gold);
+  border-radius: 2px; width: 0%;
+  transition: width 0.3s;
+}
+
+/* ── Chat Input ───────────────────────────────────────────────────────── */
+.chat-input-area {
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.chat-input {
+  flex: 1;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  outline: none;
+  resize: none;
+  min-height: 40px;
+  max-height: 100px;
+  line-height: 1.4;
+  transition: border-color 0.2s;
+}
+.chat-input::placeholder { color: rgba(255,255,255,0.25); }
+.chat-input:focus { border-color: rgba(201,168,76,0.5); }
+
+.chat-send-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.chat-send-btn:hover { background: var(--gold-lt); transform: scale(1.05); }
+.chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Notification toast ───────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  border-left: 4px solid var(--gold);
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  transform: translateX(120%);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast.show { transform: translateX(0); }
+.toast.success { border-left-color: var(--sage); }
+.toast.error { border-left-color: var(--rust); }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .main { flex-direction: column; }
+  .right-panel { width: 100%; min-width: unset; max-width: unset; height: 340px; }
+  .left-panel { border-right: none; border-bottom: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="logo">Profile<span>Forge</span></div>
+  <div class="session-badge" id="sessionBadge">Initializing…</div>
+</div>
+
+<!-- Main Layout -->
+<div class="main">
+
+  <!-- ── Left Panel ── -->
+  <div class="left-panel">
+    <!-- Tab Nav -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')">
+        <span class="tab-icon" id="icon-personal">1</span> Personal Details
+      </button>
+      <button class="tab-btn" data-tab="education" onclick="switchTab('education')">
+        <span class="tab-icon" id="icon-education">2</span> Education
+      </button>
+      <button class="tab-btn" data-tab="experience" onclick="switchTab('experience')">
+        <span class="tab-icon" id="icon-experience">3</span> Experience
+      </button>
+    </nav>
+
+    <!-- Form Area -->
+    <div class="form-area">
+
+      <!-- ── Personal ── -->
+      <div class="form-panel active" id="panel-personal">
+        <div class="section-header">
+          <div class="section-title">Personal Details</div>
+          <div class="section-subtitle">Your basic contact information and professional summary</div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="p_full_name" placeholder="Jane Doe"/>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="p_email" placeholder="jane@example.com"/>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="p_phone" placeholder="+1 (555) 000-0000"/>
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="p_location" placeholder="San Francisco, CA"/>
+          </div>
+          <div class="form-group">
+            <label>LinkedIn URL</label>
+            <input type="url" id="p_linkedin" placeholder="linkedin.com/in/janedoe"/>
+          </div>
+          <div class="form-group">
+            <label>Website / Portfolio</label>
+            <input type="url" id="p_website" placeholder="janedoe.com"/>
+          </div>
+          <div class="form-group span2">
+            <label>Professional Summary</label>
+            <textarea id="p_summary" placeholder="A brief summary of your professional background and goals…"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="savePersonal" onclick="saveSection('personal')">Save &amp; Continue →</button>
+        </div>
+      </div>
+
+      <!-- ── Education ── -->
+      <div class="form-panel" id="panel-education">
+        <div class="section-header">
+          <div class="section-title">Education</div>
+          <div class="section-subtitle">Your academic background and qualifications</div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Degree / Qualification</label>
+            <input type="text" id="e_degree" placeholder="Bachelor of Science"/>
+          </div>
+          <div class="form-group">
+            <label>Field of Study</label>
+            <input type="text" id="e_field_of_study" placeholder="Computer Science"/>
+          </div>
+          <div class="form-group span2">
+            <label>Institution Name</label>
+            <input type="text" id="e_institution" placeholder="Massachusetts Institute of Technology"/>
+          </div>
+          <div class="form-group">
+            <label>Start Year</label>
+            <input type="text" id="e_start_year" placeholder="2018"/>
+          </div>
+          <div class="form-group">
+            <label>End Year</label>
+            <input type="text" id="e_end_year" placeholder="2022"/>
+          </div>
+          <div class="form-group">
+            <label>GPA / Score</label>
+            <input type="text" id="e_gpa" placeholder="3.8 / 4.0"/>
+          </div>
+          <div class="form-group span2">
+            <label>Achievements / Honors</label>
+            <textarea id="e_achievements" placeholder="Dean's List, Scholarship, Thesis title…"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" onclick="switchTab('personal')">← Back</button>
+          <button class="btn btn-primary" id="saveEducation" onclick="saveSection('education')">Save &amp; Continue →</button>
+        </div>
+      </div>
+
+      <!-- ── Experience ── -->
+      <div class="form-panel" id="panel-experience">
+        <div class="section-header">
+          <div class="section-title">Experience</div>
+          <div class="section-subtitle">Your professional work history and skills</div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Current / Recent Title</label>
+            <input type="text" id="x_current_title" placeholder="Senior Software Engineer"/>
+          </div>
+          <div class="form-group">
+            <label>Current / Recent Company</label>
+            <input type="text" id="x_current_company" placeholder="Acme Corp"/>
+          </div>
+          <div class="form-group">
+            <label>Years of Experience</label>
+            <input type="text" id="x_years_of_experience" placeholder="5"/>
+          </div>
+          <div class="form-group">
+            <label>Certifications</label>
+            <input type="text" id="x_certifications" placeholder="AWS, PMP, CFA…"/>
+          </div>
+          <div class="form-group span2">
+            <label>Key Skills</label>
+            <input type="text" id="x_skills" placeholder="Python, React, Machine Learning, Product Strategy…"/>
+          </div>
+          <div class="form-group span2">
+            <label>Previous Roles / Experience Summary</label>
+            <textarea id="x_previous_roles" placeholder="Brief description of previous positions and responsibilities…"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" onclick="switchTab('education')">← Back</button>
+          <button class="btn btn-gold" id="saveExperience" onclick="saveSection('experience')">✓ Complete Profile</button>
+        </div>
+      </div>
+
+    </div><!-- /form-area -->
+  </div><!-- /left-panel -->
+
+  <!-- ── Right Panel: Chat ── -->
+  <div class="right-panel">
+    <div class="chat-header">
+      <div class="chat-title">Profile Assistant</div>
+      <div class="chat-subtitle">Powered by GPT-4o + FAISS RAG</div>
+      <div class="chat-rag-badge"><span class="rag-dot"></span> RAG · MiniLM Embeddings · Persistent Memory</div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg msg-ai">
+        <div class="msg-bubble">
+          👋 Hello! I'm your profile assistant.<br><br>
+          Upload your résumé or CV below and I'll automatically fill in your details across all sections. You can also ask me anything about the information you've entered!
+        </div>
+        <div class="msg-time">Now</div>
+      </div>
+    </div>
+
+    <!-- Upload zone -->
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" onchange="handleFileUpload(event)"/>
+      <div class="upload-icon">📄</div>
+      <div class="upload-label">Drop résumé here or <strong>click to upload</strong></div>
+      <div class="upload-label" style="font-size:10px; margin-top:2px; color:rgba(255,255,255,0.25)">PDF, DOCX, TXT supported</div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+      </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" rows="1"
+          placeholder="Ask about your profile…"
+          onkeydown="handleChatKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div><!-- /right-panel -->
+
+</div><!-- /main -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const API = '';  // same origin
+let SESSION_ID = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // Reuse session from localStorage for persistence
+  let sid = localStorage.getItem('profileforge_session');
+  const resp = await fetch(`${API}/api/session`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ session_id: sid || null })
+  });
+  const data = await resp.json();
+  SESSION_ID = data.session_id;
+  localStorage.setItem('profileforge_session', SESSION_ID);
+  document.getElementById('sessionBadge').textContent = `Session: ${SESSION_ID.slice(0, 8)}…`;
+
+  // Load existing profile data
+  await loadProfile();
+
+  // Load chat history
+  await loadChatHistory();
+}
+
+async function loadProfile() {
+  try {
+    const resp = await fetch(`${API}/api/session/${SESSION_ID}/profile`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    fillForm('personal', data.personal);
+    fillForm('education', data.education);
+    fillForm('experience', data.experience);
+
+    // Mark tabs complete if they have data
+    if (hasData(data.personal)) markTabComplete('personal');
+    if (hasData(data.education)) markTabComplete('education');
+    if (hasData(data.experience)) markTabComplete('experience');
+  } catch(e) { console.warn('Could not load profile:', e); }
+}
+
+function hasData(obj) {
+  return obj && Object.values(obj).some(v => v && String(v).trim());
+}
+
+function fillForm(section, data) {
+  if (!data) return;
+  const prefixMap = { personal: 'p_', education: 'e_', experience: 'x_' };
+  const prefix = prefixMap[section];
+  Object.entries(data).forEach(([k, v]) => {
+    const el = document.getElementById(`${prefix}${k}`);
+    if (el && v) el.value = v;
+  });
+}
+
+async function loadChatHistory() {
+  try {
+    const resp = await fetch(`${API}/api/chat/${SESSION_ID}/history`);
+    const msgs = await resp.json();
+    msgs.forEach(m => {
+      if (m.role !== 'system') appendMessage(m.role === 'user' ? 'user' : 'ai', m.content, false);
+    });
+  } catch(e) {}
+}
+
+// ── Tab Switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
+}
+
+function markTabComplete(tab) {
+  const icon = document.getElementById(`icon-${tab}`);
+  const btn  = document.querySelector(`[data-tab="${tab}"]`);
+  icon.textContent = '✓';
+  btn.classList.add('complete');
+}
+
+// ── Save Section ──────────────────────────────────────────────────────────────
+const fieldMap = {
+  personal:   ['full_name','email','phone','location','linkedin','website','summary'],
+  education:  ['degree','institution','field_of_study','start_year','end_year','gpa','achievements'],
+  experience: ['current_title','current_company','years_of_experience','skills','previous_roles','certifications'],
+};
+const prefixMap = { personal: 'p_', education: 'e_', experience: 'x_' };
+const nextTab   = { personal: 'education', education: 'experience', experience: null };
+
+async function saveSection(section) {
+  const data = {};
+  const prefix = prefixMap[section];
+  fieldMap[section].forEach(f => {
+    const el = document.getElementById(`${prefix}${f}`);
+    if (el) data[f] = el.value.trim();
+  });
+
+  const btn = document.getElementById(`save${section.charAt(0).toUpperCase()+section.slice(1)}`);
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    await fetch(`${API}/api/session/${SESSION_ID}/save`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ section, data })
+    });
+    markTabComplete(section);
+    showToast(`${section.charAt(0).toUpperCase()+section.slice(1)} saved!`, 'success');
+    btn.textContent = '✓ Saved!';
+    btn.classList.add('saved');
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.classList.remove('saved');
+      const label = section === 'experience' ? '✓ Complete Profile' : 'Save & Continue →';
+      btn.textContent = label;
+      if (nextTab[section]) switchTab(nextTab[section]);
+    }, 1200);
+  } catch(e) {
+    showToast('Save failed. Check your connection.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save & Continue →';
+  }
+}
+
+// ── File Upload & Parse ───────────────────────────────────────────────────────
+async function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const zone = document.getElementById('uploadZone');
+  const bar  = document.getElementById('uploadProgressBar');
+  const prog = document.getElementById('uploadProgress');
+
+  prog.style.display = 'block';
+  appendMessage('user', `📄 Uploaded: **${file.name}** — parsing your document…`);
+
+  // Fake progress animation
+  let pct = 0;
+  const ticker = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 15, 85);
+    bar.style.width = pct + '%';
+  }, 400);
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch(`${API}/api/session/${SESSION_ID}/parse-document`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await resp.json();
+
+    clearInterval(ticker);
+    bar.style.width = '100%';
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%'; }, 600);
+
+    // Fill forms
+    fillForm('personal', data.personal);
+    fillForm('education', data.education);
+    fillForm('experience', data.experience);
+
+    // Mark complete if data found
+    if (hasData(data.personal))   markTabComplete('personal');
+    if (hasData(data.education))  markTabComplete('education');
+    if (hasData(data.experience)) markTabComplete('experience');
+
+    const name = data.personal?.full_name || 'your profile';
+    appendMessage('ai',
+      `✅ Done! I've parsed your document and filled in the details for **${name}**.\n\n` +
+      `• **Personal** — name, email, location & more\n` +
+      `• **Education** — degree, institution, GPA\n` +
+      `• **Experience** — role, skills, certifications\n\n` +
+      `Review each tab and hit **Save** to confirm. Ask me anything about your profile!`
+    );
+    showToast('Document parsed & forms filled!', 'success');
+
+  } catch(e) {
+    clearInterval(ticker);
+    prog.style.display = 'none';
+    appendMessage('ai', `❌ Sorry, I couldn't parse that file. Make sure your API keys are configured and try again.`);
+    showToast('Parsing failed', 'error');
+  }
+
+  // Reset input
+  event.target.value = '';
+}
+
+// Drag & Drop
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById('fileInput').files = e.dataTransfer.files; handleFileUpload({ target: { files: e.dataTransfer.files } }); }
+});
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+let isSending = false;
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg   = input.value.trim();
+  if (!msg || isSending) return;
+  isSending = true;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  appendMessage('user', msg);
+
+  // Typing indicator
+  const typingId = appendTyping();
+
+  try {
+    const resp = await fetch(`${API}/api/chat`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ session_id: SESSION_ID, message: msg })
+    });
+    const data = await resp.json();
+    removeTyping(typingId);
+    appendMessage('ai', data.reply);
+  } catch(e) {
+    removeTyping(typingId);
+    appendMessage('ai', '⚠️ Network error. Please check the server.');
+  }
+
+  isSending = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function appendMessage(role, text, scroll = true) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}`;
+  div.innerHTML = `
+    <div class="msg-bubble">${formatText(text)}</div>
+    <div class="msg-time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+  `;
+  container.appendChild(div);
+  if (scroll) container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function appendTyping() {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  div.id = `typing-${Date.now()}`;
+  div.innerHTML = `<div class="typing-indicator">
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div.id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+function formatText(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
