@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SOW Forge — Scope of Work Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d1117;
+  --bg:#f7f6f3;
+  --surface:#ffffff;
+  --teal:#0a4d5c;
+  --teal-mid:#0e7a8a;
+  --teal-lt:#e0f4f7;
+  --gold:#c9a84c;
+  --gold-lt:#fdf6e3;
+  --muted:#6b7280;
+  --border:#dde3e8;
+  --danger:#c0392b;
+  --success:#166534;
+  --success-bg:#dcfce7;
+  --radius:8px;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+  --chat-bg:#0d1117;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+
+/* ── Top Bar ── */
+.topbar{height:56px;background:var(--teal);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;border-bottom:2px solid var(--gold)}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);letter-spacing:-.3px}
+.logo span{color:#fff;font-family:'IBM Plex Sans',sans-serif;font-weight:300;font-size:13px;margin-left:8px;opacity:.7}
+.session-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.07);padding:3px 9px;border-radius:4px;border:1px solid rgba(255,255,255,.1)}
+
+/* ── Layout ── */
+.main{display:flex;flex:1;overflow:hidden}
+.left{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+
+/* ── Tab Nav ── */
+.tab-nav{display:flex;background:#fff;border-bottom:1.5px solid var(--border);padding:0 20px;flex-shrink:0;overflow-x:auto}
+.tab-btn{display:flex;align-items:center;gap:7px;padding:13px 16px;font-size:12px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;white-space:nowrap;transition:all .18s;letter-spacing:.2px}
+.tab-btn:hover{color:var(--teal)}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+.tab-icon{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;background:var(--border);color:var(--muted);flex-shrink:0;transition:all .18s}
+.tab-btn.active .tab-icon{background:var(--teal);color:#fff}
+.tab-btn.done .tab-icon{background:var(--success);color:#fff}
+.tab-btn.done .tab-icon::after{content:'✓'}
+.tab-btn.done .tab-num{display:none}
+
+/* ── Form area ── */
+.form-area{flex:1;overflow-y:auto;padding:28px 32px}
+.panel{display:none}
+.panel.active{display:block}
+.sec-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--teal);margin-bottom:4px}
+.sec-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+
+/* ── Form grids ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.span2{grid-column:span 2}
+.fg.span3{grid-column:span 3}
+.fg label{font-size:11px;font-weight:600;color:var(--teal-mid);letter-spacing:.5px;text-transform:uppercase}
+.fg input,.fg textarea,.fg select{font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;color:var(--ink);background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;outline:none;transition:border-color .18s,box-shadow .18s}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--teal-mid);box-shadow:0 0 0 3px rgba(14,122,138,.12)}
+.fg textarea{min-height:80px;resize:vertical;line-height:1.5}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--border);margin:20px 0}
+.sub-label{font-size:12px;font-weight:600;color:var(--teal);letter-spacing:.4px;text-transform:uppercase;margin-bottom:12px;padding-bottom:6px;border-bottom:1.5px solid var(--teal-lt)}
+
+/* ── Buttons ── */
+.actions{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid var(--border);margin-top:8px}
+.btn{font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:600;padding:9px 20px;border-radius:var(--radius);border:none;cursor:pointer;transition:all .18s;letter-spacing:.2px}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-mid);transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-gold:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--teal)}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.btn.saved{background:var(--success)!important;color:#fff!important}
+
+/* ── Upload box ── */
+.upload-box{border:2px dashed var(--border);border-radius:var(--radius);padding:28px 20px;text-align:center;cursor:pointer;position:relative;transition:all .2s;background:#fafbfc;margin-bottom:20px}
+.upload-box:hover,.upload-box.over{border-color:var(--teal-mid);background:var(--teal-lt)}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:32px;margin-bottom:8px;line-height:1}
+.upload-title{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:3px}
+.upload-hint{font-size:12px;color:var(--muted)}
+.upload-prog{height:4px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;display:none}
+.upload-bar{height:100%;background:var(--teal-mid);border-radius:2px;width:0;transition:width .3s}
+.parsed-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--success);background:var(--success-bg);padding:5px 12px;border-radius:20px;margin-bottom:16px}
+
+/* ── Right panel: chat ── */
+.right{width:360px;min-width:320px;display:flex;flex-direction:column;background:var(--chat-bg);flex-shrink:0}
+.chat-hdr{padding:16px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.chat-title{font-family:'Playfair Display',serif;font-size:16px;color:#fff;font-weight:700;margin-bottom:2px}
+.chat-sub{font-size:11px;color:rgba(255,255,255,.35)}
+.rag-badge{display:inline-flex;align-items:center;gap:5px;margin-top:7px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--gold);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);padding:3px 8px;border-radius:4px}
+.rag-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+.msg{max-width:87%;animation:slideUp .22s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{align-self:flex-end}
+.msg-ai{align-self:flex-start}
+.bubble{padding:9px 13px;border-radius:13px;font-size:12.5px;line-height:1.55}
+.msg-user .bubble{background:var(--gold);color:var(--ink);border-radius:13px 13px 4px 13px;font-weight:500}
+.msg-ai .bubble{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);border-radius:13px 13px 13px 4px;border:1px solid rgba(255,255,255,.06)}
+.msg-time{font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;padding:0 2px;font-family:'IBM Plex Mono',monospace}
+.msg-user .msg-time{text-align:right}
+.typing{display:flex;align-items:center;gap:3px;padding:10px 13px;background:rgba(255,255,255,.07);border-radius:13px 13px 13px 4px;width:fit-content;border:1px solid rgba(255,255,255,.06)}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4);animation:tp 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+
+.chat-input-area{padding:10px 14px 14px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.input-row{display:flex;gap:7px;align-items:flex-end}
+.chat-ta{flex:1;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;color:rgba(255,255,255,.85);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:9px 12px;outline:none;resize:none;min-height:38px;max-height:90px;line-height:1.4;transition:border-color .18s}
+.chat-ta::placeholder{color:rgba(255,255,255,.22)}
+.chat-ta:focus{border-color:rgba(201,168,76,.5)}
+.send-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--gold);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .18s}
+.send-btn:hover{filter:brightness(1.08);transform:scale(1.05)}
+.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* ── Generate PDF button in top area ── */
+.gen-btn-wrap{padding:0 32px 18px;flex-shrink:0}
+.gen-btn{width:100%;padding:11px;background:var(--gold);color:var(--ink);border:none;border-radius:var(--radius);font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;letter-spacing:.3px}
+.gen-btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--radius);font-size:12.5px;border-left:4px solid var(--gold);z-index:999;transform:translateX(120%);transition:transform .3s cubic-bezier(.175,.885,.32,1.275)}
+.toast.show{transform:translateX(0)}
+.toast.ok{border-left-color:#16a34a}
+.toast.err{border-left-color:#dc2626}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">SOW Forge <span>Scope of Work Builder</span></div>
+  <div class="session-tag" id="sessionTag">…</div>
+</div>
+
+<div class="main">
+  <!-- ════════ LEFT PANEL ════════ -->
+  <div class="left">
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="req" onclick="gotoTab('req')">
+        <span class="tab-icon"><span class="tab-num">1</span></span> Requirements
+      </button>
+      <button class="tab-btn" data-tab="contract" onclick="gotoTab('contract')">
+        <span class="tab-icon"><span class="tab-num">2</span></span> Contract Info
+      </button>
+      <button class="tab-btn" data-tab="estimates" onclick="gotoTab('estimates')">
+        <span class="tab-icon"><span class="tab-num">3</span></span> Estimates
+      </button>
+      <button class="tab-btn" data-tab="iktva" onclick="gotoTab('iktva')">
+        <span class="tab-icon"><span class="tab-num">4</span></span> IKTVA
+      </button>
+      <button class="tab-btn" data-tab="just" onclick="gotoTab('just')">
+        <span class="tab-icon"><span class="tab-num">5</span></span> Justifications
+      </button>
+    </nav>
+
+    <div class="form-area">
+
+      <!-- ══ TAB 1: Requirements ══ -->
+      <div class="panel active" id="panel-req">
+        <div class="sec-title">Requirement Document</div>
+        <div class="sec-sub">Upload your requirement document — the assistant will parse it and pre-fill all tabs automatically.</div>
+
+        <div class="upload-box" id="reqUploadBox">
+          <input type="file" id="reqFileInput" accept=".pdf,.doc,.docx,.txt" onchange="handleReqUpload(event)"/>
+          <div class="upload-icon">📋</div>
+          <div class="upload-title">Drop requirement document here</div>
+          <div class="upload-hint">PDF, DOCX, TXT — LlamaParse will extract structured data</div>
+          <div class="upload-prog" id="reqProg"><div class="upload-bar" id="reqBar"></div></div>
+        </div>
+
+        <div id="parsedBadge" style="display:none">
+          <span class="parsed-badge">✓ Document parsed — fields auto-filled across all tabs</span>
+        </div>
+
+        <div class="sub-label">Extracted / Manual Requirements</div>
+        <div class="grid">
+          <div class="fg span2">
+            <label>Requirements Summary</label>
+            <textarea id="req_summary" placeholder="Overview of what the SOW must cover…" rows="4"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Key Deliverables</label>
+            <textarea id="req_deliverables" placeholder="List deliverables expected under this contract…" rows="3"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Special Conditions / Constraints</label>
+            <textarea id="req_conditions" placeholder="Any special terms, conditions, or constraints from the client…" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="saveReq" onclick="saveSection('requirements')">Save &amp; Continue →</button>
+        </div>
+      </div>
+
+      <!-- ══ TAB 2: Contract Info ══ -->
+      <div class="panel" id="panel-contract">
+        <div class="sec-title">Contract Information</div>
+        <div class="sec-sub">General contract details, parties involved and high-level scope objective.</div>
+        <div class="grid">
+          <div class="fg span2">
+            <label>Contract Title</label>
+            <input type="text" id="c_contract_title" placeholder="e.g. Offshore Pipeline Integrity Assessment Services"/>
+          </div>
+          <div class="fg">
+            <label>Organisation / Client</label>
+            <input type="text" id="c_organization" placeholder="Saudi Aramco / SABIC / NEOM…"/>
+          </div>
+          <div class="fg">
+            <label>Agreement Type</label>
+            <select id="c_agreement_type">
+              <option value="">Select…</option>
+              <option>Lump Sum</option>
+              <option>Reimbursable</option>
+              <option>Unit Rate</option>
+              <option>Framework Agreement</option>
+              <option>EPC</option>
+              <option>EPCM</option>
+              <option>MSA</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Effective Date</label>
+            <input type="date" id="c_effective_date"/>
+          </div>
+          <div class="fg">
+            <label>Expiry / Completion Date</label>
+            <input type="date" id="c_expiry_date"/>
+          </div>
+          <div class="fg">
+            <label>Contract Value (SAR)</label>
+            <input type="text" id="c_contract_value" placeholder="e.g. 5,000,000"/>
+          </div>
+          <div class="fg">
+            <label>Contract Reference No.</label>
+            <input type="text" id="c_ref_number" placeholder="e.g. SA-2024-CON-0142"/>
+          </div>
+          <div class="fg span2">
+            <label>Scope Objective</label>
+            <textarea id="c_scope_objective" placeholder="Describe the primary objective and purpose of this contract…" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline" onclick="gotoTab('req')">← Back</button>
+          <button class="btn btn-primary" id="saveContract" onclick="saveSection('contract')">Save &amp; Continue →</button>
+        </div>
+      </div>
+
+      <!-- ══ TAB 3: Estimates ══ -->
+      <div class="panel" id="panel-estimates">
+        <div class="sec-title">Commercial Estimates</div>
+        <div class="sec-sub">Service spend, material spend, and human resource requirements.</div>
+
+        <div class="sub-label">Financial Estimates</div>
+        <div class="grid3">
+          <div class="fg">
+            <label>Currency</label>
+            <select id="e_currency">
+              <option value="SAR">SAR — Saudi Riyal</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Service Spend</label>
+            <input type="text" id="e_service_spend" placeholder="e.g. 3,200,000" oninput="calcTotal()"/>
+          </div>
+          <div class="fg">
+            <label>Material Spend</label>
+            <input type="text" id="e_material_spend" placeholder="e.g. 1,800,000" oninput="calcTotal()"/>
+          </div>
+          <div class="fg">
+            <label>Total Contract Value</label>
+            <input type="text" id="e_total_spend" placeholder="Auto-calculated" readonly style="background:#f5f5f5;color:var(--teal);font-weight:600"/>
+          </div>
+          <div class="fg">
+            <label>Contract Duration (months)</label>
+            <input type="number" id="e_duration_months" placeholder="e.g. 24" min="1"/>
+          </div>
+          <div class="fg">
+            <label>Contingency (%)</label>
+            <input type="number" id="e_contingency" placeholder="e.g. 10" min="0" max="100"/>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="sub-label">Human Resources</div>
+        <div class="grid">
+          <div class="fg">
+            <label>Total Personnel Required</label>
+            <input type="number" id="e_hr_required" placeholder="e.g. 15" min="0"/>
+          </div>
+          <div class="fg">
+            <label>Saudi National Count</label>
+            <input type="number" id="e_saudi_count" placeholder="e.g. 7" min="0"/>
+          </div>
+          <div class="fg span2">
+            <label>Key Roles / Disciplines Required</label>
+            <input type="text" id="e_hr_roles" placeholder="e.g. Project Manager, Senior Engineers, HSE Lead, Technicians…"/>
+          </div>
+          <div class="fg span2">
+            <label>Mobilisation / Demobilisation Notes</label>
+            <textarea id="e_mob_notes" placeholder="Notes on mobilisation schedule, site requirements…" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline" onclick="gotoTab('contract')">← Back</button>
+          <button class="btn btn-primary" id="saveEstimates" onclick="saveSection('estimates')">Save &amp; Continue →</button>
+        </div>
+      </div>
+
+      <!-- ══ TAB 4: IKTVA ══ -->
+      <div class="panel" id="panel-iktva">
+        <div class="sec-title">IKTVA Targets</div>
+        <div class="sec-sub">In-Kingdom Total Value Add — Saudi Aramco's local content programme requirements.</div>
+
+        <div class="grid">
+          <div class="fg">
+            <label>IKTVA Target (%)</label>
+            <input type="number" id="i_iktva_target_percentage" placeholder="e.g. 35" min="0" max="100"/>
+          </div>
+          <div class="fg">
+            <label>IKTVA Category</label>
+            <select id="i_iktva_category">
+              <option value="">Select…</option>
+              <option>Category A — Manufacturing</option>
+              <option>Category B — Services</option>
+              <option>Category C — Construction</option>
+              <option>Category D — Technology</option>
+              <option>Category E — Consulting</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>In-Kingdom Spend (SAR)</label>
+            <input type="text" id="i_in_kingdom_spend" placeholder="e.g. 2,100,000"/>
+          </div>
+          <div class="fg">
+            <label>Saudi Manpower (%)</label>
+            <input type="number" id="i_saudi_manpower_percentage" placeholder="e.g. 45" min="0" max="100"/>
+          </div>
+          <div class="fg span2">
+            <label>Local Content Plan</label>
+            <textarea id="i_local_content_plan" placeholder="Describe how IKTVA targets will be achieved — local procurement strategy, Saudi workforce development, in-kingdom manufacturing…" rows="4"></textarea>
+          </div>
+          <div class="fg">
+            <label>Local Supplier Count</label>
+            <input type="number" id="i_local_supplier_count" placeholder="Number of Saudi suppliers"/>
+          </div>
+          <div class="fg">
+            <label>Technology Transfer</label>
+            <select id="i_tech_transfer">
+              <option value="">Select…</option>
+              <option>Yes — with training plan</option>
+              <option>Yes — equipment only</option>
+              <option>No</option>
+              <option>Partial</option>
+            </select>
+          </div>
+          <div class="fg span2">
+            <label>IKTVA Compliance Notes</label>
+            <textarea id="i_compliance_notes" placeholder="Any special IKTVA compliance requirements, reporting obligations, audit arrangements…" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline" onclick="gotoTab('estimates')">← Back</button>
+          <button class="btn btn-primary" id="saveIktva" onclick="saveSection('iktva')">Save &amp; Continue →</button>
+        </div>
+      </div>
+
+      <!-- ══ TAB 5: Justifications ══ -->
+      <div class="panel" id="panel-just">
+        <div class="sec-title">Justifications &amp; Rationale</div>
+        <div class="sec-sub">Supporting narrative for technical, commercial and compliance decisions. These sections populate Section 5 of the SOW PDF.</div>
+
+        <div class="grid">
+          <div class="fg span2">
+            <label>Technical Justification</label>
+            <textarea id="j_technical_justification" placeholder="Why this technical approach was selected, key engineering decisions…" rows="3"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Commercial Justification</label>
+            <textarea id="j_commercial_justification" placeholder="Basis of estimate, market rates, benchmark comparison, value for money argument…" rows="3"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Vendor / Supplier Selection Rationale</label>
+            <textarea id="j_vendor_selection" placeholder="Why this contractor / vendor was selected — qualifications, experience, capacity…" rows="3"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Risk Assessment</label>
+            <textarea id="j_risk_assessment" placeholder="Key risks identified, mitigation measures, residual risk level…" rows="3"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Regulatory &amp; Compliance Notes</label>
+            <textarea id="j_compliance_notes" placeholder="HSE requirements, Saudi Aramco SAEP compliance, regulatory approvals needed…" rows="2"></textarea>
+          </div>
+          <div class="fg span2">
+            <label>Additional Notes</label>
+            <textarea id="j_additional_notes" placeholder="Any other relevant information or context…" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline" onclick="gotoTab('iktva')">← Back</button>
+          <button class="btn btn-primary" id="saveJust" onclick="saveSection('justifications')">Save Justifications</button>
+        </div>
+      </div>
+
+    </div><!-- /form-area -->
+
+    <!-- Generate PDF button -->
+    <div class="gen-btn-wrap">
+      <button class="gen-btn" id="genPdfBtn" onclick="generatePdf()">
+        ⬇ Generate &amp; Download SOW PDF
+      </button>
+    </div>
+  </div><!-- /left -->
+
+  <!-- ════════ RIGHT: CHAT ════════ -->
+  <div class="right">
+    <div class="chat-hdr">
+      <div class="chat-title">SOW Assistant</div>
+      <div class="chat-sub">Ask anything about your scope of work</div>
+      <div class="rag-badge"><span class="rag-dot"></span>RAG · MiniLM · GPT-4o · Persistent</div>
+    </div>
+
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg msg-ai">
+        <div class="bubble">
+          Welcome to SOW Forge.<br><br>
+          Upload your requirement document on the first tab — I'll parse it and fill all sections automatically.<br><br>
+          You can also ask me to help draft justifications, check IKTVA compliance, or explain any field.
+        </div>
+        <div class="msg-time">Now</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="input-row">
+        <textarea class="chat-ta" id="chatInput" rows="1" placeholder="Ask about your SOW…"
+          onkeydown="chatKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let SID = null;
+let sending = false;
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+async function init() {
+  let sid = localStorage.getItem('sowforge_session');
+  const r = await fetch(`${API}/api/session`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({session_id: sid||null})
+  });
+  const d = await r.json();
+  SID = d.session_id;
+  localStorage.setItem('sowforge_session', SID);
+  document.getElementById('sessionTag').textContent = `Session: ${SID.slice(0,8)}…`;
+  await loadData();
+  await loadHistory();
+}
+
+// ─── Load saved data ─────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const r = await fetch(`${API}/api/session/${SID}/data`);
+    if (!r.ok) return;
+    const d = await r.json();
+    fillTab('req',       d.requirements);
+    fillTab('contract',  d.contract);
+    fillTab('estimates', d.estimates);
+    fillTab('iktva',     d.iktva);
+    fillTab('just',      d.justifications);
+    if (hasData(d.requirements))  markDone('req');
+    if (hasData(d.contract))      markDone('contract');
+    if (hasData(d.estimates))     markDone('estimates');
+    if (hasData(d.iktva))         markDone('iktva');
+    if (hasData(d.justifications))markDone('just');
+    if (d.parsed_requirements)    document.getElementById('parsedBadge').style.display='block';
+  } catch(e){ console.warn(e); }
+}
+
+function hasData(obj) {
+  return obj && Object.values(obj).some(v => v && String(v).trim());
+}
+
+// field prefix maps
+const PRE = { req:'req_', contract:'c_', estimates:'e_', iktva:'i_', just:'j_' };
+const FIELD_KEYS = {
+  req:      ['summary','deliverables','conditions'],
+  contract: ['contract_title','organization','agreement_type','effective_date','expiry_date','contract_value','ref_number','scope_objective'],
+  estimates:['currency','service_spend','material_spend','total_spend','duration_months','contingency','hr_required','saudi_count','hr_roles','mob_notes'],
+  iktva:    ['iktva_target_percentage','iktva_category','in_kingdom_spend','saudi_manpower_percentage','local_content_plan','local_supplier_count','tech_transfer','compliance_notes'],
+  just:     ['technical_justification','commercial_justification','vendor_selection','risk_assessment','compliance_notes','additional_notes'],
+};
+// backend keys mapping
+const DB_KEYS = {
+  req: { summary:'requirements_summary', deliverables:'key_deliverables', conditions:'special_conditions' },
+  contract: null, estimates: null, iktva: null, just: null,
+};
+
+function fillTab(tab, data) {
+  if (!data) return;
+  const pre = PRE[tab];
+  const dbmap = DB_KEYS[tab];
+  Object.entries(data).forEach(([k, v]) => {
+    const fieldKey = dbmap ? Object.entries(dbmap).find(([,dv])=>dv===k)?.[0] : k;
+    const el = document.getElementById(`${pre}${fieldKey||k}`);
+    if (el && v) el.value = v;
+  });
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function gotoTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
+}
+function markDone(tab) {
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('done');
+}
+const NEXT = { req:'contract', contract:'estimates', estimates:'iktva', iktva:'just', just:null };
+const SAVE_ID = { requirements:'saveReq', contract:'saveContract', estimates:'saveEstimates', iktva:'saveIktva', justifications:'saveJust' };
+const TAB_OF  = { requirements:'req', contract:'contract', estimates:'estimates', iktva:'iktva', justifications:'just' };
+
+// ─── Collect form data ────────────────────────────────────────────────────────
+function collectSection(section) {
+  const tab = TAB_OF[section];
+  const pre = PRE[tab];
+  const data = {};
+  FIELD_KEYS[tab].forEach(f => {
+    const el = document.getElementById(`${pre}${f}`);
+    if (el) {
+      const dbmap = DB_KEYS[tab];
+      const key = dbmap ? (dbmap[f] || f) : f;
+      data[key] = el.value.trim();
+    }
+  });
+  return data;
+}
+
+// ─── Save section ─────────────────────────────────────────────────────────────
+async function saveSection(section) {
+  const data = collectSection(section);
+  const btnId = SAVE_ID[section];
+  const btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await fetch(`${API}/api/session/${SID}/save`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({section, data})
+    });
+    markDone(TAB_OF[section]);
+    btn.textContent = '✓ Saved'; btn.classList.add('saved');
+    showToast(`${section.charAt(0).toUpperCase()+section.slice(1)} saved`, 'ok');
+    setTimeout(()=>{
+      btn.disabled=false; btn.classList.remove('saved');
+      btn.innerHTML = NEXT[TAB_OF[section]] ? 'Save &amp; Continue →' : 'Save Justifications';
+      if(NEXT[TAB_OF[section]]) gotoTab(NEXT[TAB_OF[section]]);
+    }, 1100);
+  } catch(e) {
+    showToast('Save failed', 'err');
+    btn.disabled=false; btn.textContent='Save & Continue →';
+  }
+}
+
+// ─── Total calc ───────────────────────────────────────────────────────────────
+function calcTotal() {
+  const s = parseFloat(document.getElementById('e_service_spend').value.replace(/,/g,'')) || 0;
+  const m = parseFloat(document.getElementById('e_material_spend').value.replace(/,/g,'')) || 0;
+  if (s || m) document.getElementById('e_total_spend').value = (s+m).toLocaleString();
+}
+
+// ─── Requirement doc upload ───────────────────────────────────────────────────
+async function handleReqUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const prog = document.getElementById('reqProg');
+  const bar  = document.getElementById('reqBar');
+  prog.style.display = 'block';
+  addMsg('user', `Uploading: ${file.name}`);
+
+  let pct = 0;
+  const ticker = setInterval(()=>{ pct = Math.min(pct + Math.random()*18, 88); bar.style.width=pct+'%'; }, 400);
+
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch(`${API}/api/session/${SID}/parse-requirements`, { method:'POST', body:fd });
+    const d = await r.json();
+    clearInterval(ticker); bar.style.width='100%';
+    setTimeout(()=>{ prog.style.display='none'; bar.style.width='0%'; }, 600);
+
+    // fill all tabs
+    fillTab('req',       d.requirements);
+    fillTab('contract',  d.contract);
+    fillTab('estimates', d.estimates);
+    fillTab('iktva',     d.iktva);
+    ['req','contract','estimates','iktva'].forEach(t=>{ if(hasData(d[t==='req'?'requirements':t])) markDone(t); });
+    document.getElementById('parsedBadge').style.display = 'block';
+
+    addMsg('ai',
+      `Document parsed successfully.\n\n` +
+      `I've extracted and pre-filled:\n` +
+      `• Contract details (Tab 2)\n` +
+      `• Financial estimates (Tab 3)\n` +
+      `• IKTVA targets (Tab 4)\n\n` +
+      `Review each tab, adjust as needed, then generate your SOW PDF.`
+    );
+    showToast('Document parsed & fields filled', 'ok');
+  } catch(e) {
+    clearInterval(ticker); prog.style.display='none';
+    addMsg('ai', 'Could not parse the document. Check your API keys and try again.');
+    showToast('Parse failed', 'err');
+  }
+  event.target.value='';
+}
+
+// drag-drop
+const ub = document.getElementById('reqUploadBox');
+ub.addEventListener('dragover', e=>{e.preventDefault();ub.classList.add('over')});
+ub.addEventListener('dragleave', ()=>ub.classList.remove('over'));
+ub.addEventListener('drop', e=>{
+  e.preventDefault(); ub.classList.remove('over');
+  if(e.dataTransfer.files[0]) handleReqUpload({target:{files:e.dataTransfer.files}});
+});
+
+// ─── Generate PDF ─────────────────────────────────────────────────────────────
+async function generatePdf() {
+  const btn = document.getElementById('genPdfBtn');
+  btn.disabled = true; btn.textContent = '⏳ Generating PDF…';
+  try {
+    const r = await fetch(`${API}/api/session/${SID}/generate-pdf`);
+    if (!r.ok) throw new Error('Failed');
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SOW_${SID.slice(0,8)}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('SOW PDF downloaded!', 'ok');
+    addMsg('ai', 'Your SOW PDF has been generated and downloaded. Review it carefully before submitting — all sections are populated from your saved data.');
+  } catch(e) {
+    showToast('PDF generation failed', 'err');
+  }
+  btn.disabled=false; btn.innerHTML='⬇ Generate &amp; Download SOW PDF';
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+async function sendChat() {
+  const ta = document.getElementById('chatInput');
+  const msg = ta.value.trim();
+  if (!msg || sending) return;
+  sending = true;
+  ta.value = ''; ta.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  addMsg('user', msg);
+  const tid = addTyping();
+  try {
+    const r = await fetch(`${API}/api/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id:SID, message:msg})
+    });
+    const d = await r.json();
+    removeTyping(tid);
+    addMsg('ai', d.reply);
+  } catch(e) {
+    removeTyping(tid);
+    addMsg('ai', 'Network error. Please check the server connection.');
+  }
+  sending=false;
+  document.getElementById('sendBtn').disabled=false;
+  ta.focus();
+}
+function chatKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,90)+'px'; }
+
+async function loadHistory() {
+  try {
+    const r = await fetch(`${API}/api/chat/${SID}/history`);
+    const msgs = await r.json();
+    msgs.forEach(m => addMsg(m.role==='user'?'user':'ai', m.content, false));
+  } catch(e){}
+}
+
+function addMsg(role, text, scroll=true) {
+  const c = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = `msg msg-${role}`;
+  d.innerHTML = `<div class="bubble">${fmt(text)}</div>
+    <div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
+  c.appendChild(d);
+  if(scroll) c.scrollTop = c.scrollHeight;
+}
+
+function addTyping() {
+  const c = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = 'msg msg-ai';
+  d.id = 'typ-'+Date.now();
+  d.innerHTML = '<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+  return d.id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+function fmt(t) {
+  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
