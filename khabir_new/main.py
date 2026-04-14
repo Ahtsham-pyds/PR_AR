@@ -9,11 +9,13 @@ import faiss
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from openai import OpenAI
 import httpx
+from dotenv import load_dotenv
+load_dotenv()
 
 # ── reportlab ─────────────────────────────────────────────────────────────────
 from reportlab.lib.pagesizes import A4
@@ -45,7 +47,8 @@ faiss_meta:  List[Dict]          = []
 async def lifespan(app: FastAPI):
     global embed_model, faiss_index, faiss_meta
     print("Loading MiniLM …")
-    embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+    #embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+    embed_model = SentenceTransformer("C:/Users/hahtsham/work/PR_PO/PR_AR/models/all-MiniLM-L6-v2")
     if Path(FAISS_INDEX_PATH).exists():
         faiss_index = faiss.read_index(FAISS_INDEX_PATH)
         with open(FAISS_META_PATH, "rb") as f:
@@ -682,6 +685,17 @@ def _build_pdf(buf, contract, estimates, iktva, justifications, requirements, se
     doc.build(story)
 
 # ── Serve frontend ─────────────────────────────────────────────────────────────
-frontend_path = Path(__file__).parent.parent / "frontend"
-if frontend_path.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
+# frontend_path = Path(__file__).parent.parent / "frontend"
+# if frontend_path.exists():
+#     app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
+
+
+@app.get("/")
+def serve_form():
+    frontend_path = Path(__file__).resolve().parents[1] /"khabir_new"/ "frontend" / "index.html"
+    return FileResponse(frontend_path)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
