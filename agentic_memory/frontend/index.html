@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOW Builder</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+        input, select, textarea {
+            width: 300px;
+            padding: 8px;
+            margin: 5px 0 15px 0;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>SOW (Scope of Work) Builder</h2>
+
+<form id="sowForm">
+
+    <label>Contract Type</label><br>
+    <select name="contract_type">
+        <option value="fixed">Fixed Price</option>
+        <option value="time_material">Time & Material</option>
+    </select><br>
+
+    <label>Date</label><br>
+    <input type="date" name="date"><br>
+
+    <label>Currency</label><br>
+    <select name="currency">
+        <option value="USD">USD</option>
+        <option value="INR">INR</option>
+    </select><br>
+
+    <label>Technology Used</label><br>
+    <input type="text" name="technology" placeholder="e.g. Python, Spark"><br>
+
+    <label>Duration (months)</label><br>
+    <input type="number" name="duration"><br>
+
+    <label>Preferred Vendor</label><br>
+    <input type="text" name="vendor"><br>
+
+    <label>Additional Requirements</label><br>
+    <textarea name="requirements"></textarea><br>
+
+    <button type="submit">Submit</button>
+
+</form>
+
+<script>
+document.getElementById("sowForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    const response = await fetch("/submit", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+    alert("Saved: " + result.message);
+});
+</script>
+
+</body>
+</html>
