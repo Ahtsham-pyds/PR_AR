@@ -29,14 +29,21 @@ def create_sow(tx, sow_id):
 # -----------------------
 # CREATE RELATIONSHIP
 # -----------------------
-def create_relationship(tx, sow_id, predicate, obj, confidence):
+def create_relationship(tx, sow_id, predicate, obj, confidence,sources):
     query = f"""
     MATCH (s:SOW {{id: $sow_id}})
     MATCH (e:Entity {{name: $obj}})
     MERGE (s)-[r:{predicate}]->(e)
-    SET r.confidence = $confidence
+    SET r.confidence = $confidence,
+        r.sources = $sources
     """
-    tx.run(query, sow_id=sow_id, obj=obj, confidence=confidence)
+    tx.run(
+    query,
+    sow_id=sow_id,
+    obj=obj,
+    confidence=confidence,
+    sources=sources
+)
 
 
 # -----------------------
@@ -49,10 +56,11 @@ def ingest_claims(claims):
             predicate = c["predicate"]
             obj = c["object"]
             confidence = c["confidence"]
+            sources = c["sources"]
 
             session.execute_write(create_sow, sow_id)
             session.execute_write(create_entity, obj)
-            session.execute_write(create_relationship, sow_id, predicate, obj, confidence)
+            session.execute_write(create_relationship, sow_id, predicate, obj, confidence,sources)
 
 
 # -----------------------
