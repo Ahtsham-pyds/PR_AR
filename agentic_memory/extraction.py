@@ -111,77 +111,63 @@ def normalize_predicate(p):
 
 
 
-def extract_from_llm(text: str, sow_id: str) -> List[Dict]:
-    """
-    LLM-based extraction with strict JSON output
-    """
+def extract_from_llm(text: str, sow_id: str):
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        temperature=0,
+        messages=[
+            {"role": "system", "content": "Extract structured data."},
+            {"role": "user", "content": text}
+        ],
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "sow_extraction",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "predicate": {"type": "string"},
+                                    "object": {"type": "string"}
+                                },
+                                "required": ["predicate", "object"]
+                            }
+                        }
+                    },
+                    "required": ["items"]
+                }
+            }
+        }
+    )
 
-    if not text.strip():
-        return []
+    data = response.choices[0].message.parsed
 
-    prompt = f"""
-You are an information extraction system.
+    claims = []
+    for item in data["items"]:
+        claims.append({
+            "subject": sow_id,
+            "predicate": normalize_predicate(item["predicate"]),
+            "object": normalize_text(item["object"]),
+            "confidence": 0.7,
+            "source": "llm"
+        })
 
-Extract structured information from the SOW text.
-
-Return ONLY valid JSON (no explanation).
-
-Schema:
-[
-  {{
-    "predicate": "USES_TECH | DELIVERABLE | TIMELINE | RESOURCE | COST | LOCATION",
-    "object": "string"
-  }}
-]
-
-Rules:
-- Do NOT hallucinate
-- Only extract explicitly mentioned info
-- Keep object short and normalized
-- If nothing found, return []
-
-Text:
-{text}
-"""
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            temperature=0,
-            messages=[
-                {"role": "system", "content": "You extract structured data."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-
-        content = response.choices[0].message.content.strip()
-
-        # 🔒 Safety: Ensure valid JSON
-        extracted = safe_json_loads(content)
-
-        claims = []
-        for item in extracted:
-            if "predicate" in item and "object" in item:
-                claims.append({
-                    "subject": sow_id,
-                    "predicate": normalize_predicate(item["predicate"]),
-                    "object": normalize_text(item["object"]),
-                    "confidence": 0.65,  # slightly higher than rules
-                    "source": "llm"
-                })
-
-        return claims
-
-    except Exception as e:
-        print(f"LLM extraction failed: {e}")
-        return []
+    return claims
 
 
 # -----------------------
 # MAIN PIPELINE
 # -----------------------
-def run_extraction():
-    cursor.execute("SELECT * FROM sow")
+def run_extraction(sow_id=None) -> List[Dict]:
+    if sow_id:
+        cursor.execute("SELECT * FROM sow WHERE id=?", (sow_id,))
+    else:
+        cursor.execute("SELECT * FROM sow")
+
     rows = cursor.fetchall()
 
     all_claims = []

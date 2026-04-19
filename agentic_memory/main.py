@@ -2,6 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import sqlite3
+from extraction import run_extraction
+from reconciliation import reconcile_claims
+from neo4j_injest import ingest_claims
 
 app = FastAPI()
 
@@ -59,6 +62,15 @@ def submit_sow(sow: SOW):
         sow.vendor,
         sow.requirements
     ))
+    
+    sow_id = cursor.lastrowid
+    claims = run_extraction(sow_id=sow_id)
+
+    # 2. Reconcile
+    claims = reconcile_claims(claims)
+
+    # 3. Push to Neo4j
+    ingest_claims(claims)
 
     conn.commit()
 

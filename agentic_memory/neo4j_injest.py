@@ -1,4 +1,5 @@
 from neo4j import GraphDatabase
+from reconciliation import reconcile_claims
 
 URI = "neo4j://127.0.0.1:7687"
 USER = "neo4j"
@@ -61,6 +62,7 @@ if __name__ == "__main__":
     from extraction import run_extraction
 
     claims = run_extraction()
+    claims = reconcile_claims(claims) 
     ingest_claims(claims)
 
     print("Data inserted into Neo4j")
