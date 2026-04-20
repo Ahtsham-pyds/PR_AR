@@ -12,6 +12,9 @@ app = FastAPI()
 conn = sqlite3.connect("sow.db", check_same_thread=False)
 cursor = conn.cursor()
 
+def get_db():
+    return sqlite3.connect("sow.db")
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS sow (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,6 +51,8 @@ def serve_ui():
 # --- API to Save Data ---
 @app.post("/submit")
 def submit_sow(sow: SOW):
+    conn = get_db()
+    cursor = conn.cursor()
     cursor.execute("""
     INSERT INTO sow (
         contract_type, date, currency,
@@ -64,10 +69,13 @@ def submit_sow(sow: SOW):
     ))
     
     sow_id = cursor.lastrowid
+    print(sow_id)
     claims = run_extraction(sow_id=sow_id)
+    #print(claims)
 
     # 2. Reconcile
     claims = reconcile_claims(claims)
+    #print(claims)
 
     # 3. Push to Neo4j
     ingest_claims(claims)
@@ -77,6 +85,6 @@ def submit_sow(sow: SOW):
     return {"message": "SOW stored successfully"}
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -15,7 +15,7 @@ def create_entity(tx, name):
     tx.run("""
         MERGE (e:Entity {name: $name})
     """, name=name)
-
+    return None
 
 # -----------------------
 # HELPER: CREATE SOW NODE
@@ -24,6 +24,8 @@ def create_sow(tx, sow_id):
     tx.run("""
         MERGE (s:SOW {id: $sow_id})
     """, sow_id=sow_id)
+    
+    return None
 
 
 # -----------------------
@@ -44,13 +46,14 @@ def create_relationship(tx, sow_id, predicate, obj, confidence,sources):
     confidence=confidence,
     sources=sources
 )
+    return None
 
 
 # -----------------------
 # MAIN INGEST FUNCTION
 # -----------------------
 def ingest_claims(claims):
-    with driver.session() as session:
+    with driver.session(database="sow") as session:
         for c in claims:
             sow_id = c["subject"]
             predicate = c["predicate"]
@@ -61,16 +64,16 @@ def ingest_claims(claims):
             session.execute_write(create_sow, sow_id)
             session.execute_write(create_entity, obj)
             session.execute_write(create_relationship, sow_id, predicate, obj, confidence,sources)
+        return 'Claims ingested successfully'
 
 
 # -----------------------
 # RUN
 # -----------------------
-if __name__ == "__main__":
-    from extraction import run_extraction
+# if __name__ == "__main__":
+#     from extraction import run_extraction
 
-    claims = run_extraction()
-    claims = reconcile_claims(claims) 
-    ingest_claims(claims)
+#     claims = run_extraction()
+#     claims = reconcile_claims(claims) 
+#     ingest_claims(claims)
 
-    print("Data inserted into Neo4j")

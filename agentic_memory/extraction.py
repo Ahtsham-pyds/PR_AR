@@ -144,7 +144,7 @@ def extract_from_llm(text: str, sow_id: str):
         }
     )
 
-    data = response.choices[0].message.parsed
+    data = json.loads(response.choices[0].message.content)
 
     claims = []
     for item in data["items"]:
@@ -162,13 +162,18 @@ def extract_from_llm(text: str, sow_id: str):
 # -----------------------
 # MAIN PIPELINE
 # -----------------------
-def run_extraction(sow_id=None) -> List[Dict]:
+def run_extraction(sow_id=None):
+    conn = sqlite3.connect("sow.db")
+    cursor = conn.cursor()
     if sow_id:
-        cursor.execute("SELECT * FROM sow WHERE id=?", (sow_id,))
+        #cursor.execute("SELECT * FROM sow WHERE id=?", (sow_id,))
+        cursor.execute("SELECT * FROM sow")
     else:
         cursor.execute("SELECT * FROM sow")
 
     rows = cursor.fetchall()
+    
+    print(f"Retrieved rows: {len(rows)}") 
 
     all_claims = []
 
@@ -187,10 +192,11 @@ def run_extraction(sow_id=None) -> List[Dict]:
 
         all_claims.extend(structured_claims + rule_claims + llm_claims)
 
+
     return all_claims
 
 
-if __name__ == "__main__":
-    claims = run_extraction()
-    for c in claims:
-        print(c)
+# if __name__ == "__main__":
+#     claims = run_extraction()
+#     for c in claims:
+#         print(c)
