@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import sqlite3
-from extraction import run_extraction
+from extraction import run_extraction_from_row
 from reconciliation import reconcile_claims
 from neo4j_injest import ingest_claims
 
@@ -69,8 +69,21 @@ def submit_sow(sow: SOW):
     ))
     
     sow_id = cursor.lastrowid
-    print(sow_id)
-    claims = run_extraction(sow_id=sow_id)
+    sow_id =1 
+
+    row = {
+        "id": sow_id,
+        "contract_type": sow.contract_type,
+        "date": sow.date,
+        "currency": sow.currency,
+        "technology": sow.technology,
+        "duration": sow.duration,
+        "vendor": sow.vendor,
+        "requirements": sow.requirements
+    }
+
+    # 🔥 NO DB READ
+    claims = run_extraction_from_row(row)
     #print(claims)
 
     # 2. Reconcile

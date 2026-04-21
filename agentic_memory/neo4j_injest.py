@@ -8,6 +8,14 @@ PASSWORD = "password"
 driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
 
 
+import re
+
+def normalize_predicate_for_neo4j(p):
+    p = p.strip().upper()
+    p = re.sub(r'[^A-Z0-9_]', '_', p)  # replace invalid chars
+    p = re.sub(r'_+', '_', p)          # collapse multiple underscores
+    return p
+
 # -----------------------
 # HELPER: CREATE ENTITY
 # -----------------------
@@ -32,6 +40,7 @@ def create_sow(tx, sow_id):
 # CREATE RELATIONSHIP
 # -----------------------
 def create_relationship(tx, sow_id, predicate, obj, confidence,sources):
+    predicate = normalize_predicate_for_neo4j(predicate)
     query = f"""
     MATCH (s:SOW {{id: $sow_id}})
     MATCH (e:Entity {{name: $obj}})
@@ -53,7 +62,7 @@ def create_relationship(tx, sow_id, predicate, obj, confidence,sources):
 # MAIN INGEST FUNCTION
 # -----------------------
 def ingest_claims(claims):
-    with driver.session(database="sow") as session:
+    with driver.session(database="sow1") as session:
         for c in claims:
             sow_id = c["subject"]
             predicate = c["predicate"]

@@ -195,6 +195,25 @@ def run_extraction(sow_id=None):
 
     return all_claims
 
+def run_extraction_from_row(row):
+    sow_id = f"SOW_{row['id']}"
+
+    structured_claims = extract_from_structured([
+        row['id'],
+        row['contract_type'],
+        row['date'],
+        row['currency'],
+        row['technology'],
+        row['duration'],
+        row['vendor'],
+        row['requirements']
+    ])
+
+    rule_claims = extract_from_text_rules(row["requirements"], sow_id)
+    llm_claims = extract_from_llm(row["requirements"], sow_id)
+
+    return structured_claims + rule_claims + llm_claims
+
 
 # if __name__ == "__main__":
 #     claims = run_extraction()
