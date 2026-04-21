@@ -39,23 +39,73 @@ def create_sow(tx, sow_id):
 # -----------------------
 # CREATE RELATIONSHIP
 # -----------------------
+# def create_relationship(tx, sow_id, predicate, obj, confidence,sources):
+#     predicate = normalize_predicate_for_neo4j(predicate)
+#     query = f"""
+#     MATCH (s:SOW {{id: $sow_id}})
+#     MATCH (e:Entity {{name: $obj}})
+#     MERGE (s)-[r:{predicate}]->(e)
+#     SET r.confidence = $confidence,
+#         r.sources = $sources
+#     """
+#     tx.run(
+#     query,
+#     sow_id=sow_id,
+#     obj=obj,
+#     confidence=confidence,
+#     sources=sources
+# )
+#     return None
+
+
+SINGLE_VALUED = {
+    "HAS_DURATION",
+    "HAS_CONTRACT_TYPE",
+    "USES_CURRENCY",
+    "PREFERRED_VENDOR"
+}
+
+
 def create_relationship(tx, sow_id, predicate, obj, confidence,sources):
     predicate = normalize_predicate_for_neo4j(predicate)
-    query = f"""
-    MATCH (s:SOW {{id: $sow_id}})
-    MATCH (e:Entity {{name: $obj}})
-    MERGE (s)-[r:{predicate}]->(e)
-    SET r.confidence = $confidence,
+    # Ensure nodes exist
+    tx.run("""
+        MERGE (s:SOW {id: $sow_id})
+    """, sow_id=sow_id)
+
+    tx.run("""
+        MERGE (e:Entity {name: $obj})
+    """, obj=obj)
+
+    if predicate in SINGLE_VALUED:
+        # 🔴 Step 1: Deactivate existing active relationship
+        tx.run(f"""
+        MATCH (s:SOW {{id: $sow_id}})-[r:{predicate}]->()
+        WHERE r.is_active = true
+        SET r.is_active = false,
+            r.valid_to = datetime()
+        """, sow_id=sow_id)
+
+        # 🟢 Step 2: CREATE new relationship (THIS is where your line goes)
+        tx.run(f"""
+        MATCH (s:SOW {{id: $sow_id}})
+        MATCH (e:Entity {{name: $obj}})
+        CREATE (s)-[r:{predicate} {{
+            valid_from: datetime(),
+            is_active: true,
+            confidence: $confidence
+        }}]->(e)
+        """, sow_id=sow_id, obj=obj, confidence=confidence)
+
+    else:
+        # Multi-valued → allow multiple
+        tx.run(f"""
+        MATCH (s:SOW {{id: $sow_id}})
+        MATCH (e:Entity {{name: $obj}})
+        MERGE (s)-[r:{predicate}]->(e)
+        SET r.confidence = $confidence,
         r.sources = $sources
-    """
-    tx.run(
-    query,
-    sow_id=sow_id,
-    obj=obj,
-    confidence=confidence,
-    sources=sources
-)
-    return None
+        """, sow_id=sow_id, obj=obj, confidence=confidence,sources=sources)
 
 
 # -----------------------
