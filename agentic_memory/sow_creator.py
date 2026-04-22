@@ -1,0 +1,13 @@
+from retrieval import get_sow_context
+from llm_response_generator import generate_sow
+from retrieval import format_context_for_llm
+
+sow_id = "SOW_1"
+
+context = get_sow_context(sow_id)
+
+context_text = format_context_for_llm(context)
+
+document = generate_sow(context_text)
+
+print(document)
