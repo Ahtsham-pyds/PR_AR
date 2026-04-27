@@ -1,6 +1,6 @@
 from neo4j import GraphDatabase
 
-URI = "neo4j://localhost:7687"
+URI = "neo4j://127.0.0.1:7687"
 USER = "neo4j"
 PASSWORD = "password"
 
@@ -16,7 +16,7 @@ def get_sow_context(sow_id: str):
 
     context = {}
 
-    with driver.session() as session:
+    with driver.session(database="sow1") as session:
         result = session.run(query, sow_id=sow_id)
 
         for record in result:
