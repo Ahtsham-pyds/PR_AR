@@ -10,7 +10,7 @@ driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
 def get_sow_context(sow_id: str):
     query = """
     MATCH (s:SOW {id: $sow_id})-[r]->(e)
-    WHERE r.is_active = true
+    WHERE r.is_active = true OR r.is_active IS NULL
     RETURN type(r) AS predicate, e.name AS value
     """
 
