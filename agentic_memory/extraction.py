@@ -163,6 +163,7 @@ def extract_from_llm(text: str, sow_id: str):
 # MAIN PIPELINE
 # -----------------------
 def run_extraction(sow_id=None):
+    """Extract claims for a specific SOW ID or all if None"""
     conn = sqlite3.connect("sow.db")
     cursor = conn.cursor()
     if sow_id:
@@ -196,6 +197,7 @@ def run_extraction(sow_id=None):
     return all_claims
 
 def run_extraction_from_row(row):
+    """Same as run_extraction but takes a single row dict instead of querying DB"""
     sow_id = f"SOW_{row['id']}"
 
     structured_claims = extract_from_structured([
