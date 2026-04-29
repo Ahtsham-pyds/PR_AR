@@ -1,62 +1,144 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SOW Builder</title>
+    <title>SOW Builder + AI Chatbot</title>
+
     <style>
         body {
-            font-family: Arial;
-            margin: 40px;
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            display: flex;
+            gap: 40px;
         }
+
+        .left-panel {
+            width: 45%;
+        }
+
+        .right-panel {
+            width: 45%;
+        }
+
         input, select, textarea {
-            width: 300px;
+            width: 100%;
             padding: 8px;
             margin: 5px 0 15px 0;
+            box-sizing: border-box;
         }
+
         button {
             padding: 10px 20px;
             cursor: pointer;
         }
+
+        .chat-box {
+            border: 1px solid #ccc;
+            height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+
+        .msg {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            white-space: pre-wrap;
+        }
+
+        .user {
+            background: #dbeafe;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .bot {
+            background: #e5e7eb;
+            margin-right: auto;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-row input {
+            flex: 1;
+            margin: 0;
+        }
+
+        h2, h3 {
+            margin-top: 0;
+        }
     </style>
 </head>
+
 <body>
 
-<h2>SOW (Scope of Work) Builder</h2>
+    <!-- LEFT SIDE FORM -->
+    <div class="left-panel">
 
-<form id="sowForm">
+        <h2>SOW (Scope of Work) Builder</h2>
 
-    <label>Contract Type</label><br>
-    <select name="contract_type">
-        <option value="fixed">Fixed Price</option>
-        <option value="time_material">Time & Material</option>
-    </select><br>
+        <form id="sowForm">
 
-    <label>Date</label><br>
-    <input type="date" name="date"><br>
+            <label>Contract Type</label>
+            <select name="contract_type">
+                <option value="fixed">Fixed Price</option>
+                <option value="time_material">Time & Material</option>
+            </select>
 
-    <label>Currency</label><br>
-    <select name="currency">
-        <option value="USD">USD</option>
-        <option value="INR">INR</option>
-    </select><br>
+            <label>Date</label>
+            <input type="date" name="date">
 
-    <label>Technology Used</label><br>
-    <input type="text" name="technology" placeholder="e.g. Python, Spark"><br>
+            <label>Currency</label>
+            <select name="currency">
+                <option value="USD">USD</option>
+                <option value="INR">INR</option>
+            </select>
 
-    <label>Duration (months)</label><br>
-    <input type="number" name="duration"><br>
+            <label>Technology Used</label>
+            <input type="text" name="technology" placeholder="Python, Spark">
 
-    <label>Preferred Vendor</label><br>
-    <input type="text" name="vendor"><br>
+            <label>Duration (months)</label>
+            <input type="number" name="duration">
 
-    <label>Additional Requirements</label><br>
-    <textarea name="requirements"></textarea><br>
+            <label>Preferred Vendor</label>
+            <input type="text" name="vendor">
 
-    <button type="submit">Submit</button>
+            <label>Additional Requirements</label>
+            <textarea name="requirements" rows="5"></textarea>
 
-</form>
+            <button type="submit">Submit</button>
+
+        </form>
+
+    </div>
+
+
+    <!-- RIGHT SIDE CHATBOT -->
+    <div class="right-panel">
+
+        <h3>AI SOW Assistant</h3>
+
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Ask or update SOW..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+    </div>
+
 
 <script>
+/* --------------------------
+   FORM SUBMIT
+---------------------------*/
 document.getElementById("sowForm").addEventListener("submit", async function(e) {
+
     e.preventDefault();
 
     const formData = new FormData(e.target);
@@ -71,8 +153,56 @@ document.getElementById("sowForm").addEventListener("submit", async function(e) 
     });
 
     const result = await response.json();
-    alert("Saved: " + result.message);
+
+    alert(result.message);
 });
+
+
+/* --------------------------
+   CHATBOT SEND
+---------------------------*/
+async function sendMessage() {
+
+    const input = document.getElementById("chatInput");
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    appendMessage(message, "user");
+    input.value = "";
+
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user_input: message
+        })
+    });
+
+    const result = await response.json();
+
+    appendMessage(result.response, "bot");
+}
+
+
+/* --------------------------
+   APPEND CHAT MESSAGE
+---------------------------*/
+function appendMessage(text, sender) {
+
+    const chatBox = document.getElementById("chatBox");
+
+    const div = document.createElement("div");
+    div.classList.add("msg", sender);
+
+    div.innerText = text;
+
+    chatBox.appendChild(div);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 </script>
 
 </body>

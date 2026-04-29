@@ -5,6 +5,9 @@ import sqlite3
 from extraction import run_extraction_from_row
 from reconciliation import reconcile_claims
 from neo4j_injest import ingest_claims
+from pydantic import BaseModel
+from graph import app as app_api
+
 
 app = FastAPI()
 
@@ -96,6 +99,41 @@ def submit_sow(sow: SOW):
     conn.commit()
 
     return {"message": "SOW stored successfully"}
+
+
+
+
+class ChatRequest(BaseModel):
+    user_input: str
+
+
+# ---------------------------------
+# CHAT ENDPOINT
+# ---------------------------------
+@app_api.post("/chat")
+def chat_endpoint(payload: ChatRequest):
+
+    try:
+        # Run LangGraph agent
+        result = app_api.invoke({
+            "user_input": payload.user_input,
+            "intent": "",
+            "extracted_claims": [],
+            "graph_result": {},
+            "vector_result": [],
+            "final_response": ""
+        })
+
+        return {
+            "status": "success",
+            "response": result["final_response"]
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "response": str(e)
+        }
 
 
 # if __name__ == "__main__":
