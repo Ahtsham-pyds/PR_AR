@@ -7,8 +7,6 @@ from neo4j_injest import ingest_claims
 from reconciliation import reconcile_claims
 from extraction import extract_from_llm
 from vector_store import vector_search
-from dotenv import load_dotenv
-load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
 
