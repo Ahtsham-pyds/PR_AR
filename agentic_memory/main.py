@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from pathlib import Path
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import sqlite3
@@ -7,9 +8,16 @@ from reconciliation import reconcile_claims
 from neo4j_injest import ingest_claims
 from pydantic import BaseModel
 from graph import app as app_api
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse, FileResponse
 
 
-app = FastAPI()
+app = FastAPI(title="SOW Builder API") 
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
 
 # --- DB Setup ---
 conn = sqlite3.connect("sow.db", check_same_thread=False)
@@ -49,6 +57,17 @@ class SOW(BaseModel):
 def serve_ui():
     with open("frontend/index.html", "r") as f:
         return f.read()
+    
+# @app.get("/")
+# def serve_form():
+#     #,../frontend_path = Path(__file__).resolve().parents[1] / "agentic_memory"/ "frontend" / "index.html")
+#     frontend_path = Path(__file__).resolve().parents[1] / "agentic_memory"/ "frontend" / "index.html"
+#     return FileResponse(frontend_path)
+
+    
+# @app.get("/")#, response_class=HTMLResponse)
+# def serve_ui():
+#         return 'abc'
 
 
 # --- API to Save Data ---
@@ -110,7 +129,7 @@ class ChatRequest(BaseModel):
 # ---------------------------------
 # CHAT ENDPOINT
 # ---------------------------------
-@app_api.post("/chat")
+@app.post("/chat")
 def chat_endpoint(payload: ChatRequest):
 
     try:

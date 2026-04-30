@@ -48,8 +48,8 @@ workflow.add_edge("generate", END)
 
 app = workflow.compile()
 
-result = app.invoke({
-    "user_input": "Change duration to 6 months"
-})
+# result = app.invoke({
+#     "user_input": "Change duration to 6 months"
+# })
 
-print(result["final_response"])
+# print(result["final_response"])
