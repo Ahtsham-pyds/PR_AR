@@ -1,0 +1,7 @@
+{
+      "dependencies": ["."],
+      "graphs": {
+        "my_agent": "C:/Users/hahtsham/work/PR_PO/PR_AR/agentic_memory/graph.py:app"
+      },
+      "env": "C:/Users/hahtsham/work/PR_PO/.env"
+    }

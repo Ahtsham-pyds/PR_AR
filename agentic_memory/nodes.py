@@ -5,33 +5,52 @@ from llm_response_generator import generate_sow
 from retrieval import format_context_for_llm, get_sow_context
 from neo4j_injest import ingest_claims
 from reconciliation import reconcile_claims
-from extraction import extract_from_llm
+from extraction import run_extraction_from_row
 from vector_store import vector_search
 
 client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
 
-def detect_intent(state):
-    text = state["user_input"].lower()
 
-    if any(x in text for x in ["change", "update", "add", "remove"]):
-        intent = "update"
+import sqlite3
+import pandas as pd
+conn = sqlite3.connect('sow.db')
+df = pd.read_sql_query("SELECT * FROM sow WHERE id = 1", conn)
+row = {
+        "id": df['id'].iloc[0],
+        "contract_type": df['contract_type'].iloc[0],
+        "date": df['date'].iloc[0],
+        "currency": df['currency'].iloc[0],
+        "technology": df['technology'].iloc[0],
+        "duration": df['duration'].iloc[0],
+        "vendor": df['vendor'].iloc[0],
+        "requirements": df['requirements'].iloc[0]
+    }
 
-    elif any(x in text for x in ["draft", "generate", "create sow"]):
-        intent = "generate"
 
-    elif any(x in text for x in ["what", "show", "current"]):
-        intent = "query"
 
-    else:
-        intent = "memory"
+# def detect_intent(state):
+#     text = state["user_input"].lower()
 
-    state["intent"] = intent
-    return state
+#     if any(x in text for x in ["change", "update", "add", "remove"]):
+#         intent = "update"
+
+#     elif any(x in text for x in ["draft", "generate", "create sow"]):
+#         intent = "generate"
+
+#     elif any(x in text for x in ["what", "show", "current"]):
+#         intent = "query"
+
+#     else:
+#         intent = "memory"
+
+#     state["intent"] = intent
+#     return state
 
 def extract_update(state):
     text = state["user_input"]
 
-    claims = extract_from_llm(text, "SOW_1")
+    claims = run_extraction_from_row(row, text)
+    #claims = extract_from_llm(text, "SOW_1")
 
     state["extracted_claims"] = claims
     return state

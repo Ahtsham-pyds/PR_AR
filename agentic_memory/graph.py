@@ -1,10 +1,11 @@
 from langgraph.graph import StateGraph, END
 from state import AgentState
 from nodes import *
+from intent_detection import tool_router
 
 workflow = StateGraph(AgentState)
 
-workflow.add_node("detect", detect_intent)
+workflow.add_node("router", tool_router)
 workflow.add_node("extract", extract_update)
 workflow.add_node("reconcile", reconcile_node)
 workflow.add_node("update_graph", update_graph_node)
@@ -12,10 +13,10 @@ workflow.add_node("query_graph", query_graph_node)
 workflow.add_node("search_vector", search_vector_node)
 workflow.add_node("generate", generate_node)
 
-workflow.set_entry_point("detect")
+workflow.set_entry_point("router")
 
 def route_after_detect(state):
-    intent = state["intent"]
+    intent = state["tool"]
 
     if intent == "update":
         return "extract"
@@ -28,7 +29,7 @@ def route_after_detect(state):
     
 
 workflow.add_conditional_edges(
-    "detect",
+    "router",
     route_after_detect,
     {
         "extract": "extract",
