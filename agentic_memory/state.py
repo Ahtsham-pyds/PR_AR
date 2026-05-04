@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Dict, Any
+from typing_extensions import TypedDict, List, Dict, Any
 
 class AgentState(TypedDict):
     user_input: str
