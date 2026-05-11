@@ -16,13 +16,13 @@ workflow.add_node("generate", generate_node)
 workflow.set_entry_point("router")
 
 def route_after_detect(state):
-    intent = state["tool"]
+    tool = state["tool"]
 
-    if intent == "update":
+    if tool == "update":
         return "extract"
-    elif intent == "query":
+    elif tool == "query":
         return "query_graph"
-    elif intent == "generate":
+    elif tool == "generate":
         return "generate"
     else:
         return "search_vector"

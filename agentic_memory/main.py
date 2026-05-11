@@ -148,7 +148,7 @@ def chat_endpoint(payload: ChatRequest):
         # Run LangGraph agent
         result = app_api.invoke({
             "user_input": payload.user_input,
-            "intent": "",
+            "tool": "",
             "extracted_claims": [],
             "graph_result": {},
             "vector_result": [],
