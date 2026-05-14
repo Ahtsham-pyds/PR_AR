@@ -141,7 +141,7 @@ class ChatRequest(BaseModel):
 # ---------------------------------
 # CHAT ENDPOINT
 # ---------------------------------
-@app.post("/chat")
+
 def chat_endpoint(payload: ChatRequest):
 
     try:
@@ -165,6 +165,28 @@ def chat_endpoint(payload: ChatRequest):
             "status": "error",
             "response": str(e)
         }
+        
+        
+@app.post("/chat")    
+def chat_endpoint1(payload: ChatRequest):
+
+    try:
+        # Run LangGraph agent
+        result = app_api.invoke({
+            "user_input": payload.user_input
+        })
+
+        return {
+            "status": "success",
+            "response": result["final_response"]
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "response": str(e)
+        }
+#chat_endpoint1()
 
 
 # if __name__ == "__main__":

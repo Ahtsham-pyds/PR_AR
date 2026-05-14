@@ -27,18 +27,19 @@ if os.path.exists(INDEX_FILE):
 
 else:
     index = faiss.IndexFlatL2(DIMENSION)
+   # index = faiss.IndexIDMap(faiss.IndexFlatL2(DIMENSION))
     metadata = []
     
     
-def add_to_vector_store(text: str, extra_meta=None):
+def add_to_vector_store(query: str, extra_meta=None):
 
-    embedding = model.encode([text])
+    embedding = model.encode([query])
     embedding = np.array(embedding).astype("float32")
 
     index.add(embedding)
 
     metadata.append({
-        "text": text,
+        "query": query,
         "meta": extra_meta
     })
 

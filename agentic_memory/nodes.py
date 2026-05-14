@@ -5,8 +5,8 @@ from llm_response_generator import generate_sow
 from retrieval import format_context_for_llm, get_sow_context
 from neo4j_injest import ingest_claims
 from reconciliation import reconcile_claims
-from extraction import run_extraction_from_row
-from vector_store import vector_search
+from extraction import run_extraction_from_row, extract_from_llm
+from vector_store import add_to_vector_store, vector_search
 
 client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
 
@@ -49,8 +49,8 @@ row = {
 def extract_update(state):
     text = state["user_input"]
 
-    claims = run_extraction_from_row(row, text)
-    #claims = extract_from_llm(text, "SOW_1")
+    #claims = run_extraction_from_row(row)
+    claims = extract_from_llm(text, "SOW_1")
 
     state["extracted_claims"] = claims
     return state
@@ -79,6 +79,12 @@ def generate_node(state):
     doc = generate_sow(text)
 
     state["final_response"] = doc
+    return state
+
+def add_to_vector_node(state):
+    query = state["user_input"]
+    text = state["final_response"]
+    add_to_vector_store(query, extra_meta={"text": text})
     return state
 
 def search_vector_node(state):
