@@ -1,6 +1,7 @@
 from openai import OpenAI
 import os
 
+from redis_setup.warm_memory import load_warm_memory
 from llm_response_generator import generate_sow
 from retrieval import format_context_for_llm, get_sow_context
 from neo4j_injest import ingest_claims
@@ -91,4 +92,18 @@ def search_vector_node(state):
     docs = vector_search(state["user_input"])
     state["vector_result"] = docs
     state["final_response"] = "\n".join(docs)
+    return state
+
+
+
+
+
+def warm_load_node(state):
+
+    user_id = state.get("user_id", "default_user")
+
+    warm = load_warm_memory(user_id)
+
+    state["warm_memory"] = warm
+
     return state

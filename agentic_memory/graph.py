@@ -5,6 +5,7 @@ from intent_detection import tool_router
 
 workflow = StateGraph(AgentState)
 
+workflow.add_node("warm_load", warm_load_node)
 workflow.add_node("router", tool_router)
 workflow.add_node("add_to_vector", add_to_vector_node)
 workflow.add_node("extract", extract_update)
@@ -14,7 +15,7 @@ workflow.add_node("query_graph", query_graph_node)
 workflow.add_node("search_vector", search_vector_node)
 workflow.add_node("generate", generate_node)
 
-workflow.set_entry_point("router")
+workflow.set_entry_point("warm_load")
 
 def route_after_detect(state):
     tool = state["tool"]
@@ -40,7 +41,7 @@ workflow.add_conditional_edges(
     }
 )
 
-
+workflow.add_edge("warm_load", "router")
 workflow.add_edge("extract", "reconcile")
 workflow.add_edge("reconcile", "update_graph")
 workflow.add_edge("update_graph", "add_to_vector")
