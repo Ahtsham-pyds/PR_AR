@@ -63,7 +63,10 @@ def vector_search(query: str, top_k=5):
     results = []
 
     for idx in indices[0]:
+       # print(idx)
+       # print(metadata[idx])
         if idx < len(metadata):
-            results.append(metadata[idx]["text"])
+            results.append(metadata[idx]["query"])
+            results.append(metadata[idx]["meta"]["text"])
 
     return results

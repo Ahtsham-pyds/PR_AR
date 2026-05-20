@@ -1,5 +1,5 @@
 import json
-from PR_AR.agentic_memory.redis_setup.redis_client import redis_client
+from redis_client import redis_client
 
 
 TTL_SECONDS = 3600

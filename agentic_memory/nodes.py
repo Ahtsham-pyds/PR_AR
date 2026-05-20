@@ -1,13 +1,15 @@
 from openai import OpenAI
 import os
 
-from redis_setup.warm_memory import load_warm_memory
+from warm_memory import load_warm_memory
+
 from llm_response_generator import generate_sow
 from retrieval import format_context_for_llm, get_sow_context
 from neo4j_injest import ingest_claims
 from reconciliation import reconcile_claims
 from extraction import run_extraction_from_row, extract_from_llm
 from vector_store import add_to_vector_store, vector_search
+from warm_memory import write_warm_memory
 
 client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
 
@@ -62,9 +64,42 @@ def reconcile_node(state):
     return state
 
 
+
+
+
 def update_graph_node(state):
-    ingest_claims(state["extracted_claims"])
+
+    claims = state["extracted_claims"]
+
+    ingest_claims(claims)
+
+    # -------------------------
+    # UPDATE REDIS HOT MEMORY
+    # -------------------------
+    warm_data = {}
+
+    for claim in claims:
+
+        predicate = claim["predicate"]
+        obj = claim["object"]
+
+        if predicate == "HAS_DURATION":
+            warm_data["duration"] = obj
+
+        elif predicate == "PREFERRED_VENDOR":
+            warm_data["preferred_vendor"] = obj
+
+        elif predicate == "ACTIVE_SOW":
+            warm_data["active_sow"] = obj
+
+    if warm_data:
+        write_warm_memory(
+            user_id="default_user",
+            data=warm_data
+        )
+
     state["final_response"] = "SOW updated successfully."
+
     return state
 
 def query_graph_node(state):

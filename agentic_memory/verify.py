@@ -1,3 +1,3 @@
 # 
 
-from warm_memory import load_warm_memory
+from PR_AR.agentic_memory import redis_client
